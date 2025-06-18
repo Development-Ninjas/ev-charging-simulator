@@ -28,7 +28,7 @@ wss.on('connection', ws => {
 
   const interval = setInterval(() => {
     if (isCharging && soc < 100) {
-      const deltaHours = 1 / 3600;
+      const deltaHours = (1 / 3600)*5;
       const addedKWh = kW * deltaHours;
       soc = Math.min(soc + (addedKWh / batteryCapacity) * 100, 100);
 
@@ -51,7 +51,7 @@ wss.on('connection', ws => {
         }
       });
     }
-  }, 1000);
+  }, 200);
 
   ws.on('close', () => {
     clearInterval(interval);

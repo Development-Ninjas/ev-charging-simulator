@@ -35,7 +35,7 @@ export default function ChargingDashboard() {
         style={{ backgroundImage: `url(${batteryBg})` }}
       >
         <div
-          className="absolute bottom-[13.5%] left-[39.6%] w-[21.8%] bg-green-500 transition-all duration-500 z-10 rounded-b-xl"
+          className="absolute bottom-[13.5%] left-[39.65%] w-[21.75%] bg-green-500 transition-all duration-500 z-10 rounded-b-xl"
           style={{ height: `${soc * 0.62}%`, opacity: 0.8 }}
         ></div>
         <div className="absolute inset-0 flex flex-col justify-center items-center text-black text-lg font-semibold drop-shadow-md z-20">

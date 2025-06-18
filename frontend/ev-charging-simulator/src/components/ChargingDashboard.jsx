@@ -36,9 +36,9 @@ export default function ChargingDashboard() {
       >
         <div
           className="absolute bottom-[13.5%] left-[39.6%] w-[21.8%] bg-green-500 transition-all duration-500 z-10 rounded-b-xl"
-          style={{ height: `${soc * 0.62}%`, opacity: 0.7 }}
+          style={{ height: `${soc * 0.62}%`, opacity: 0.8 }}
         ></div>
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-black text-lg font-semibo drop-shadow-md z-20">
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-black text-lg font-semibold drop-shadow-md z-20">
           {Math.floor(soc)}%<br />Charged
         </div>
       </div>

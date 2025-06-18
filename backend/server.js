@@ -9,6 +9,7 @@ let isCharging = false;
 const batteryCapacity = 50;
 const pricePerkWh = 10;
 let connectedClients = new Map();
+const userSessions = new Map();
 
 wss.on('connection', ws => {
   let userId = null;
@@ -19,37 +20,65 @@ wss.on('connection', ws => {
     if (msg.type === 'register') {
       userId = msg.userId;
       connectedClients.set(ws, userId);
+      if (!userSessions.has(userId)) {
+        userSessions.set(userId, {
+          soc: 10,
+          kW: 7.4,
+          batteryCapacity: 50,
+          isCharging: false,
+        });
+      }
     }
 
-    if (msg.type === 'start') isCharging = true;
-    if (msg.type === 'stop') isCharging = false;
-    if (msg.type === 'setRate') kW = msg.kW;
+     if (msg.type === 'setRate') {
+      const session = userSessions.get(userId);
+      if (session) {
+        session.kW = msg.kW;
+        session.batteryCapacity = msg.batteryCapacity;
+      }
+    }
+
+    if (msg.type === 'start') {
+      const session = userSessions.get(userId);
+      if (session) session.isCharging = true;
+    }
+
+    if (msg.type === 'stop') {
+      const session = userSessions.get(userId);
+      if (session) session.isCharging = false;
+    }
   });
 
   const interval = setInterval(() => {
-    if (isCharging && soc < 100) {
-      const deltaHours = (1 / 3600)*5;
-      const addedKWh = kW * deltaHours;
-      soc = Math.min(soc + (addedKWh / batteryCapacity) * 100, 100);
+    for (const [client, uid] of connectedClients.entries()) {
+      const session = userSessions.get(uid);
+      if (!session || !session.isCharging || session.soc >= 100) continue;
 
-      const remainingKWh = (100 - soc) * batteryCapacity / 100;
-      const remainingHours = remainingKWh / kW;
-      const energyUsed = soc * batteryCapacity / 100;
+      const deltaHours = (1 / 3600) * 5; // 5 sec simulation tick
+      const addedKWh = session.kW * deltaHours;
+      session.soc = Math.min(session.soc + (addedKWh / session.batteryCapacity) * 100, 100);
+
+      const remainingKWh = (100 - session.soc) * session.batteryCapacity / 100;
+      const remainingHours = remainingKWh / session.kW;
+      const energyUsed = session.soc * session.batteryCapacity / 100;
       const cost = energyUsed * pricePerkWh;
 
-      const payload = {
-        userId,
-        soc,
+       const payload = {
+        userId: uid,
+        soc: session.soc,
         remainingHours,
         energyUsed,
         cost: cost.toFixed(2),
       };
 
-      wss.clients.forEach(client => {
-        if (client.readyState === ws.OPEN && connectedClients.get(client) === userId) {
-          client.send(JSON.stringify(payload));
-        }
-      });
+      // wss.clients.forEach(client => {
+      //   if (client.readyState === ws.OPEN && connectedClients.get(client) === userId) {
+      //     client.send(JSON.stringify(payload));
+      //   }
+      // });
+      if (client.readyState === ws.OPEN) {
+        client.send(JSON.stringify(payload));
+      }
     }
   }, 200);
 
